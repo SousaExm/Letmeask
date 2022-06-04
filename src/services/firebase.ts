@@ -4,6 +4,7 @@ import { initializeApp }  from "firebase/app";
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { getAuth } from 'firebase/auth'
 import * as Data from 'firebase/database'
+import { onValue } from "firebase/database";
 
 export const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -30,9 +31,19 @@ type QuestionType = {
   isAnswered:boolean
 }
 
+type FirebaseQuestionsType = Record<string, {
+  author: {
+    name:string,
+    avatar: string;
+  }
+  content: string,
+  isAnswered:boolean,
+  isHighlighted:boolean
+}>
+
 export const app = initializeApp(firebaseConfig)
 export const auth = getAuth()
-const db = Data.getDatabase()
+export const db = Data.getDatabase()
 const ref = Data.ref
 const push = Data.push
 const set = Data.set
@@ -59,6 +70,34 @@ export async function CreateNewQuestion(question:QuestionType, roomId:string | u
   await push(specificRoomRef, question)
 }
 
+export async function GetQuestions(roomId:string | undefined, hookForQuestions: any){
+  const questionsRef = ref(db, 'rooms/'+ roomId  + '/questions')
+  const thisRoom = await get(child(ref(db), "rooms/" + roomId))
+
+  onValue(questionsRef, (questions) => {
+    
+    const firebaseQuestions:FirebaseQuestionsType = questions.val()
+    const isParseableQuestions = firebaseQuestions !== null 
+    let usableParsedQuestions;
+
+    if(isParseableQuestions){
+    let parsedQuestions = Object.entries(firebaseQuestions)
+    
+    usableParsedQuestions = parsedQuestions.map(([key, value]) => {
+      return {
+        id: key,
+        content: value.content,
+        author: value.author,
+        isHighlighted: value.isHighlighted,
+        isAnswered: value.isAnswered,
+      }})} 
+    
+    hookForQuestions(isParseableQuestions && usableParsedQuestions, thisRoom.val().title)
+    
+  },{
+    onlyOnce: true
+  })
+}
 
 
 
