@@ -42,7 +42,8 @@ export function AdminRoom(){
                 avatar: user.avatar,
             },
             isHighlighted: false,
-            isAnswered: false
+            isAnswered: false,
+            likeCount: 0,
         }
 
         await CreateNewQuestion(question, roomId)

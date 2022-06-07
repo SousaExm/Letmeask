@@ -9,20 +9,22 @@ type QuestionType = {
       }
       content: string,
       isAnswered:boolean,
-      isHighlighted:boolean 
+      isHighlighted:boolean,
+      likeCount: number,
+      likeId: string | undefined
 }
 
-export function useRoom (roomId:string | undefined, handle:any){
+export function useRoom (roomId:string | undefined, handle:any, userId?: string | undefined){
     const [questions, setQuestions] = useState<QuestionType[]>([])
     const [roomTitle, setRoomTitle] = useState("")
 
     useEffect(() => {
-        GetQuestions(roomId,(arrayQuestions:QuestionType[], title:string) => {
+            GetQuestions(roomId,(arrayQuestions:QuestionType[], title:string) => {
             setQuestions(arrayQuestions)
             setRoomTitle(title)
-        })
+        },userId)
 
-    }, [roomId, handle])
+    }, [roomId, handle, userId])
 
     return { questions, roomTitle }
 }

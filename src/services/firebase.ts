@@ -4,7 +4,7 @@ import { initializeApp }  from "firebase/app";
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { getAuth } from 'firebase/auth'
 import * as Data from 'firebase/database'
-import { onValue } from "firebase/database";
+import { onValue, remove } from "firebase/database";
 
 export const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -28,7 +28,9 @@ type QuestionType = {
       avatar:string,
   },
   isHighlighted:boolean,
-  isAnswered:boolean
+  isAnswered:boolean,
+  likeCount: number,
+  likeId?: string | undefined
 }
 
 type FirebaseQuestionsType = Record<string, {
@@ -38,7 +40,10 @@ type FirebaseQuestionsType = Record<string, {
   }
   content: string,
   isAnswered:boolean,
-  isHighlighted:boolean
+  isHighlighted:boolean,
+  likes: Record<string,{
+    authorId:string
+  }>
 }>
 
 export const app = initializeApp(firebaseConfig)
@@ -70,7 +75,12 @@ export async function CreateNewQuestion(question:QuestionType, roomId:string | u
   await push(specificRoomRef, question)
 }
 
-export async function GetQuestions(roomId:string | undefined, hookForQuestions: any){
+export async function ControlLike( roomId:string | undefined , author: object | undefined , questionId : string | undefined, likeId: string | undefined){
+  const specificQuestionRef = ref(db,'rooms/' + roomId + '/questions/' + questionId + '/likes' + (likeId ? '/' + likeId  : '') )
+  !likeId ? await push(specificQuestionRef, author) : await remove(specificQuestionRef)
+}
+
+export async function GetQuestions( roomId:string | undefined, hookForQuestions: any, userId? : string | undefined ){
   const questionsRef = ref(db, 'rooms/'+ roomId  + '/questions')
   const thisRoom = await get(child(ref(db), "rooms/" + roomId))
 
@@ -90,6 +100,8 @@ export async function GetQuestions(roomId:string | undefined, hookForQuestions: 
         author: value.author,
         isHighlighted: value.isHighlighted,
         isAnswered: value.isAnswered,
+        likeCount: Object.values(value.likes ?? {}).length,
+        likeId: Object.entries(value.likes ?? {}).find(([key, like]) => like.authorId === userId)?.[0],
       }})} 
     
     hookForQuestions(isParseableQuestions && usableParsedQuestions, thisRoom.val().title)
