@@ -4,7 +4,7 @@ import { initializeApp }  from "firebase/app";
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { getAuth } from 'firebase/auth'
 import * as Data from 'firebase/database'
-import { onValue, remove } from "firebase/database";
+import { onValue, remove, update } from "firebase/database";
 
 export const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -75,6 +75,11 @@ export async function CreateNewQuestion(question:QuestionType, roomId:string | u
   await push(specificRoomRef, question)
 }
 
+export async function RemoveQuestion(roomId:string | undefined, questionId: string | undefined){
+  const specificQuestionRef = ref(db,'rooms/' + roomId + '/questions/' + questionId)
+  await remove(specificQuestionRef)
+}
+
 export async function ControlLike( roomId:string | undefined , author: object | undefined , questionId : string | undefined, likeId: string | undefined){
   const specificQuestionRef = ref(db,'rooms/' + roomId + '/questions/' + questionId + '/likes' + (likeId ? '/' + likeId  : '') )
   !likeId ? await push(specificQuestionRef, author) : await remove(specificQuestionRef)
@@ -109,6 +114,17 @@ export async function GetQuestions( roomId:string | undefined, hookForQuestions:
   },{
     onlyOnce: true
   })
+}
+
+export async function EndRoom(roomId: string | undefined ){
+  const roomReef = ref(db, 'rooms/'+ roomId)
+  update(roomReef, {endeedAt: new Date()})
+}
+
+export async function IsEndeedRoom(roomId: string | undefined ){
+  const roomReef = ref(db, 'rooms/'+ roomId)
+  const isEndeed = await get(child(roomReef, 'endeedAt'))
+  return isEndeed.exists()
 }
 
 

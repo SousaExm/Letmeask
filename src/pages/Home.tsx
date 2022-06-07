@@ -9,7 +9,7 @@ import { Button } from '../components/Button'
 
 import { useAuth } from '../hooks/useAuth'
 import { FormEvent, useState } from 'react'
-import { IsJoinableRoom } from '../services/firebase'
+import { IsEndeedRoom, IsJoinableRoom } from '../services/firebase'
 
 export function Home() {
     
@@ -27,6 +27,11 @@ export function Home() {
         if(! await IsJoinableRoom(roomCode)){
             return alert("Por favor informe um código de sala válido")
         }
+        
+        if( await IsEndeedRoom(roomCode)){
+            return alert("Essa sala já foi ecerrada, por favor informe outro código de sala")
+        }
+
         navigate('/rooms/' + roomCode)
     }
     
