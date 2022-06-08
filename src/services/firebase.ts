@@ -47,7 +47,7 @@ type FirebaseQuestionsType = Record<string, {
 }>
 
 export const app = initializeApp(firebaseConfig)
-export const auth = getAuth()
+export const auth =  getAuth()
 export const db = Data.getDatabase()
 const ref = Data.ref
 const push = Data.push
@@ -118,7 +118,17 @@ export async function GetQuestions( roomId:string | undefined, hookForQuestions:
 
 export async function EndRoom(roomId: string | undefined ){
   const roomReef = ref(db, 'rooms/'+ roomId)
-  update(roomReef, {endeedAt: new Date()})
+  await update(roomReef, {endeedAt: new Date()})
+}
+
+export async function HighlihtQuestion( roomId: string | undefined, questionId: string ){
+  const questionRef = ref(db, 'rooms/'+ roomId + '/questions/' + questionId)
+  await update(questionRef, {isHighlighted: true})
+}
+
+export async function AnswerQuestion( roomId: string | undefined, questionId: string ){
+  const questionRef = ref(db, 'rooms/'+ roomId + '/questions/' + questionId)
+  await update(questionRef, {isAnswered: true})
 }
 
 export async function IsEndeedRoom(roomId: string | undefined ){
